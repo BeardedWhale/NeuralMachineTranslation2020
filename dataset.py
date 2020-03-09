@@ -57,8 +57,8 @@ class RuEnDataset(data.Dataset):
 def collate_fn(batch):
     (xx, yy) = zip(*batch)
     len_x = len(xx)
-    all_sent = [torch.squeeze(el, dim=0) for el in (xx + yy)]
-    all_pad = pad_sequence(all_sent, batch_first=True, padding_value=PAD_ID)
-    xx_pad = all_pad[:len_x]
-    yy_pad = all_pad[len_x:]
+    xx = [torch.squeeze(el, dim=0) for el in xx]
+    yy = [torch.squeeze(el, dim=0) for el in yy]
+    xx_pad = pad_sequence(xx, batch_first=True, padding_value=PAD_ID)
+    yy_pad = pad_sequence(yy, batch_first=True, padding_value=PAD_ID)
     return xx_pad, yy_pad
