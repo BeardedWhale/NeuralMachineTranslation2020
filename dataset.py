@@ -25,20 +25,24 @@ def read_corupuses(en_file, ru_file):
     return en_corpus, ru_corpus
 
 
-def init_tokenizers(en_file, ru_file) -> Tuple[yttm.youtokentome.BPE, yttm.youtokentome.BPE]:
+def init_tokenizers(en_file, ru_file, en_vocab_size=5000, ru_vocab_size=5000) -> Tuple[
+    yttm.youtokentome.BPE, yttm.youtokentome.BPE]:
     if not (os.path.exists(en_file) and os.path.exists(ru_file)):
         raise FileNotFoundError('Couldn\'t find corpus files')
-    yttm.BPE.train(data=en_file, vocab_size=5000, model='en_tokenizer.model')
-    yttm.BPE.train(data=ru_file, vocab_size=5000, model='ru_tokenizer.model')
+    yttm.BPE.train(data=en_file, vocab_size=en_vocab_size, model='en_tokenizer.model')
+    yttm.BPE.train(data=ru_file, vocab_size=ru_vocab_size, model='ru_tokenizer.model')
     return yttm.BPE(model='en_tokenizer.model'), yttm.BPE(model='ru_tokenizer.model')
 
 
 class RuEnDataset(data.Dataset):
     def __init__(self, en_file, ru_file,
                  en_tokenizer_file='en_tokenizer.model',
-                 ru_tokenizer_file='ru_tokenizer.model'):
+                 ru_tokenizer_file='ru_tokenizer.model',
+                 en_vocab_size=5000,
+                 ru_vocab_size=5000
+                 ):
         if not (os.path.exists(en_tokenizer_file) and os.path.exists(ru_tokenizer_file)):
-            self.en_tokenizer, self.ru_tokenizer = init_tokenizers(en_file, ru_file)
+            self.en_tokenizer, self.ru_tokenizer = init_tokenizers(en_file, ru_file, en_vocab_size, ru_vocab_size)
         else:
             self.en_tokenizer = yttm.BPE(model=en_tokenizer_file)
             self.ru_tokenizer = yttm.BPE(model=ru_tokenizer_file)
@@ -53,6 +57,7 @@ class RuEnDataset(data.Dataset):
         en_sent_enc = self.en_tokenizer.encode([self.en_corpus[idx]], output_type=yttm.OutputType.ID, bos=True,
                                                eos=True)
         return tensor(ru_sent_enc), tensor(en_sent_enc)
+
 
 def collate_fn(batch):
     (xx, yy) = zip(*batch)
